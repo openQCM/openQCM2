@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -49,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.LayoutStyle;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
@@ -59,6 +61,9 @@ import org.ardulink.core.AbstractListenerLink;
 import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
 import org.ardulink.legacy.Link;
+import org.openqcm.ardulink.ArdulinkConnectionDialog;
+import org.openqcm.biobright.BiobrightConnectionDialog;
+import org.openqcm.biobright.ConnectionInfo;
 
 public class OpenQCMConsole extends JFrame implements CustomListener {
 
@@ -107,6 +112,7 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
     private JToggleButton connectBtn;
     private JFormattedTextField temperatureCurrent;
     private JTextField qcmDataChartTextField;
+    private JToggleButton biobrightToggleButton;
 
 	/**
 	 * Launch the application.
@@ -200,27 +206,38 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
         qcmDataChartTextField.setHorizontalAlignment(JTextField.CENTER);
         qcmDataChartTextField.setText("QCM Data Chart");
         qcmDataChartTextField.setBorder(null);
+        
+        biobrightToggleButton = new JToggleButton("BioBrigth Connect");
+        biobrightToggleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	biobrightActionPerformed(evt);
+            }
+        });
+
 
         GroupLayout jPanelBottomLayout = new GroupLayout(jPanelBottom);
-        jPanelBottom.setLayout(jPanelBottomLayout);
         jPanelBottomLayout.setHorizontalGroup(
-            jPanelBottomLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelBottomLayout.createSequentialGroup()
-                .addComponent(saveFileBtn, GroupLayout.PREFERRED_SIZE, 90, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(qcmDataChartTextField)
-                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(connectBtn, GroupLayout.PREFERRED_SIZE, 90, GroupLayout.PREFERRED_SIZE))
+        	jPanelBottomLayout.createParallelGroup(Alignment.LEADING)
+        		.addGroup(jPanelBottomLayout.createSequentialGroup()
+        			.addComponent(saveFileBtn, GroupLayout.PREFERRED_SIZE, 90, GroupLayout.PREFERRED_SIZE)
+        			.addPreferredGap(ComponentPlacement.UNRELATED)
+        			.addComponent(qcmDataChartTextField, 484, 484, 484)
+        			.addPreferredGap(ComponentPlacement.RELATED)
+        			.addComponent(connectBtn, GroupLayout.PREFERRED_SIZE, 90, GroupLayout.PREFERRED_SIZE))
+        		.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 158, GroupLayout.PREFERRED_SIZE)
         );
         jPanelBottomLayout.setVerticalGroup(
-            jPanelBottomLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelBottomLayout.createSequentialGroup()
-                .addGroup(jPanelBottomLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                    .addComponent(connectBtn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(qcmDataChartTextField, GroupLayout.Alignment.TRAILING)
-                    .addComponent(saveFileBtn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+        	jPanelBottomLayout.createParallelGroup(Alignment.LEADING)
+        		.addGroup(jPanelBottomLayout.createSequentialGroup()
+        			.addGroup(jPanelBottomLayout.createParallelGroup(Alignment.LEADING)
+        				.addComponent(connectBtn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        				.addComponent(qcmDataChartTextField, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+        				.addComponent(saveFileBtn, GroupLayout.DEFAULT_SIZE, 32, Short.MAX_VALUE))
+        			.addPreferredGap(ComponentPlacement.RELATED)
+        			.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
+        			.addContainerGap())
         );
+        jPanelBottom.setLayout(jPanelBottomLayout);
 
         jPanelChart.setBackground(new java.awt.Color(0, 142, 192));
 
@@ -402,13 +419,35 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
         }
     }
     
+    
+    private void biobrightActionPerformed(ActionEvent evt) {
+        if (biobrightToggleButton.isSelected() == true) {
+            // open the popup frame for biobright connection
+        	BiobrightConnectionDialog dlg = new BiobrightConnectionDialog(this, "Biobright Connection Dialog", "Connection params:");
+            try {
+            	ConnectionInfo connectionInfo = dlg.getBiobrightConnectionPanel().getConnectionInfo();
+            	biobrightToggleButton.setText("BioBrigth Disconnect");
+            }
+            catch(Exception e) {
+            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
+            	biobrightToggleButton.setSelected(false);
+            }
+        	
+        	
+        } else {
+        	biobrightToggleButton.setText("BioBrigth Connect");
+
+        }
+	}
+
+    
     private void connectBtnActionPerformed(ActionEvent evt) {
 
         if (connectBtn.isSelected() == true) {
             // open the popup frame for serial connection
             ArdulinkConnectionDialog dlg = new ArdulinkConnectionDialog(this, "Ardulink Connection Dialog", "Links");
             try {
-                link = dlg.getConnectionPanel().createLink();
+                link = dlg.getArdulinkConnectionPanel().createLink();
                 if(link.getDelegate() instanceof AbstractListenerLink) {
                     ((AbstractListenerLink)link.getDelegate()).addCustomListener(this);
                 } else {
@@ -424,7 +463,7 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
                 connectBtn.setSelected(false);
             }
 
-        } else if (connectBtn.isSelected() == false) {
+        } else {
             try {
 				((AbstractListenerLink)link.getDelegate()).removeCustomListener(this);
 			} catch (IOException e) {

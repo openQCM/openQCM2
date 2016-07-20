@@ -54,10 +54,14 @@
 		<args4j.version>2.32</args4j.version>
 		<slf4j.version>1.7.12</slf4j.version>
 		<junit.version>4.12</junit.version>
+		<ardulink.version>2.0.0-SNAPSHOT</ardulink.version>
+		<jackson.version>2.8.0</jackson.version>
 	</properties>
 
 	<modules>
 		<module>openqcm-swing</module>
+		<module>openqcm-virtualhardware</module>
+		<module>openqcm-biobright</module>
 	</modules>
 
 	<dependencyManagement>
