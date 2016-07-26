@@ -90,12 +90,14 @@ public class BiobrightClient {
 		ObjectMapper mapper = new ObjectMapper(); // Jackson's JSON marshaller
 		try {
 			payload = mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(info);
+			logger.info("Publishing.. " + new String(payload));
 		} catch (IOException e) {
 			logger.throwing(this.getClass().getName(), "publish()", e);
 			throw new RuntimeException("JSON transform failed.", e);
 		}
 		
-		publish(topic, payload, QoS.EXACTLY_ONCE, false);
+		publish(topic, payload, QoS.AT_LEAST_ONCE, false);
+		logger.info("published.");
 	}
 
 	private void publish(String topic, byte[] payload, QoS qos, boolean retain) {
