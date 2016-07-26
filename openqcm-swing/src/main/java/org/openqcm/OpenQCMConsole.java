@@ -19,6 +19,8 @@
 package org.openqcm;
 
 import static java.util.logging.Level.SEVERE;
+import static org.openqcm.biobright.PublishingInfo.Type.FREQUENCY;
+import static org.openqcm.biobright.PublishingInfo.Type.TEMPERATURE;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -62,8 +64,10 @@ import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
 import org.ardulink.legacy.Link;
 import org.openqcm.ardulink.ArdulinkConnectionDialog;
+import org.openqcm.biobright.BiobrightClient;
 import org.openqcm.biobright.BiobrightConnectionDialog;
 import org.openqcm.biobright.ConnectionInfo;
+import org.openqcm.biobright.PublishingInfo;
 
 public class OpenQCMConsole extends JFrame implements CustomListener {
 
@@ -114,6 +118,8 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
     private JTextField qcmDataChartTextField;
     private JToggleButton biobrightToggleButton;
 
+    private BiobrightClient biobrightClient; 
+    
 	/**
 	 * Launch the application.
 	 */
@@ -426,22 +432,46 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
         	BiobrightConnectionDialog dlg = new BiobrightConnectionDialog(this, "Biobright Connection Dialog", "Connection params:");
             try {
             	ConnectionInfo connectionInfo = dlg.getBiobrightConnectionPanel().getConnectionInfo();
+            	disconnectBioBright();
+            	
+            	biobrightClient = new BiobrightClient(connectionInfo);
+            	biobrightClient.connect();
+            	if(!isBioBrightConnected()) {
+            		throw new RuntimeException("Connection failed.");
+            	}
+            	
             	biobrightToggleButton.setText("BioBrigth Disconnect");
             }
             catch(Exception e) {
             	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
             	biobrightToggleButton.setSelected(false);
+            	disconnectBioBright();
             }
         	
         	
         } else {
+        	disconnectBioBright();
         	biobrightToggleButton.setText("BioBrigth Connect");
-
         }
 	}
 
+    private boolean isBioBrightConnected() {
+    	return biobrightClient != null && biobrightClient.isConnected();
+    }
     
-    private void connectBtnActionPerformed(ActionEvent evt) {
+    private void disconnectBioBright() {
+    	try {
+        	if(isBioBrightConnected()) {
+        		biobrightClient.disconnect();
+        	}
+    	} catch(Exception e1) {
+    		// OK is good enough
+    	} finally {
+    		biobrightClient = null;
+    	}
+	}
+
+	private void connectBtnActionPerformed(ActionEvent evt) {
 
         if (connectBtn.isSelected() == true) {
             // open the popup frame for serial connection
@@ -599,6 +629,13 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
                     // do nothing... TODO
                 }
 
+            }
+            
+            // call biobright
+            if(isBioBrightConnected()) {
+            	long now = System.currentTimeMillis();
+            	biobrightClient.publish(new PublishingInfo(FREQUENCY, now, String.format("%.1f", meanFrequency), "deviceIDFake1"));
+            	biobrightClient.publish(new PublishingInfo(TEMPERATURE, now, String.format("%.1f", meanTemperature), "deviceIDFake1"));
             }
 
         }		

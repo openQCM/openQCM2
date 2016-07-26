@@ -29,6 +29,7 @@ public class BiobrightConnectionDialog extends AbstractConnectionDialog {
 
 	public BiobrightConnectionDialog(JFrame parent, String title, String message) {
 		super(parent, title, message);
+		pack();
 	}
 
     public BiobrightConnectionPanel getBiobrightConnectionPanel() {
@@ -38,7 +39,7 @@ public class BiobrightConnectionDialog extends AbstractConnectionDialog {
 	
 	@Override
 	public JPanel createConnectionPanel() {
-		return new JPanel();
+		return new BiobrightConnectionPanel();
 	}
     
 }

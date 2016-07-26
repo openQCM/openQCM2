@@ -101,7 +101,7 @@ public class BiobrightClient {
 	}
 
 	private void publish(String topic, byte[] payload, QoS qos, boolean retain) {
-		if(connection != null) {
+		if(isConnected()) {
 			try {
 				connection.publish(topic, payload, qos, retain);
 			} catch (Exception e) {
