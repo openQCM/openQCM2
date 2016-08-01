@@ -2,7 +2,6 @@ package org.openqcm.biobright;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 
@@ -11,12 +10,14 @@ import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.QoS;
 import org.openqcm.biobright.PublishingInfo.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BiobrightClient {
 
-    private static Logger logger = Logger.getLogger(BiobrightClient.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(BiobrightClient.class);
 
     private static final String TEMPERATURE_TOPIC_PREFIX = "/openqcm/dev/temperature/";
     private static final String FREQUENCY_TOPIC_PREFIX = "/openqcm/dev/frequency/";
@@ -52,7 +53,7 @@ public class BiobrightClient {
 			connection.connect();			
 			logger.info("Connected MQTT socket.. ");
 		} catch (Exception e) {
-			logger.throwing(this.getClass().getName(), "connect()", e);
+			logger.error("connect()", e);
 			if(connection != null) {
 				connection = null;
 			}
@@ -69,7 +70,7 @@ public class BiobrightClient {
 			try {
 				connection.disconnect();
 			} catch (Exception e) {
-				logger.throwing(this.getClass().getName(), "disconnect()", e);
+				logger.error("disconnect()", e);
 				throw new RuntimeException("Disconnection failed.", e);
 			}
 		}
@@ -92,7 +93,7 @@ public class BiobrightClient {
 			payload = mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(info);
 			logger.info("Publishing.. " + new String(payload));
 		} catch (IOException e) {
-			logger.throwing(this.getClass().getName(), "publish()", e);
+			logger.error("publish()", e);
 			throw new RuntimeException("JSON transform failed.", e);
 		}
 		
@@ -105,7 +106,7 @@ public class BiobrightClient {
 			try {
 				connection.publish(topic, payload, qos, retain);
 			} catch (Exception e) {
-				logger.throwing(this.getClass().getName(), "publish()", e);
+				logger.error("publish()", e);
 				throw new RuntimeException("Publish failed.", e);
 			}
 		} else {

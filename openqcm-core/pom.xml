@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>openqcm-virtualhardware</artifactId>
+	<artifactId>openqcm-core</artifactId>
 
 	<parent>
 		<groupId>org.openqcm</groupId>
@@ -31,6 +31,15 @@
 			<groupId>org.ardulink</groupId>
 			<artifactId>ardulink-core-base</artifactId>
 			<version>${ardulink.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 		    <groupId>org.apache.commons</groupId>

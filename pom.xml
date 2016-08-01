@@ -59,6 +59,7 @@
 	</properties>
 
 	<modules>
+		<module>openqcm-core</module>
 		<module>openqcm-swing</module>
 		<module>openqcm-virtualhardware</module>
 		<module>openqcm-biobright</module>

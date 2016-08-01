@@ -16,7 +16,7 @@
  * along with openQCM.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package org.openqcm;
+package org.openqcm.core;
 
 import java.util.NoSuchElementException;
 

@@ -39,6 +39,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.openqcm</groupId>
+			<artifactId>openqcm-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openqcm</groupId>
 			<artifactId>openqcm-biobright</artifactId>
 			<version>${project.version}</version>
 		</dependency>

@@ -19,8 +19,6 @@
 package org.openqcm;
 
 import static java.util.logging.Level.SEVERE;
-import static org.openqcm.biobright.PublishingInfo.Type.FREQUENCY;
-import static org.openqcm.biobright.PublishingInfo.Type.TEMPERATURE;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -34,7 +32,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -58,18 +55,19 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.ardulink.core.AbstractListenerLink;
-import org.ardulink.core.events.CustomEvent;
-import org.ardulink.core.events.CustomListener;
 import org.ardulink.legacy.Link;
 import org.openqcm.ardulink.ArdulinkConnectionDialog;
 import org.openqcm.biobright.BiobrightClient;
 import org.openqcm.biobright.BiobrightConnectionDialog;
 import org.openqcm.biobright.ConnectionInfo;
-import org.openqcm.biobright.PublishingInfo;
+import org.openqcm.core.ArdulinkConnector;
+import org.openqcm.core.event.OpenQCMEvent;
+import org.openqcm.core.event.OpenQCMListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class OpenQCMConsole extends JFrame implements CustomListener {
+public class OpenQCMConsole extends JFrame {
 
 	private static final long serialVersionUID = 7156718994340002449L;
 
@@ -77,25 +75,10 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
     File sf;
     // Write file for data recording
     private FileWriter fw;
-    // size of circular buffer
-    private final int bufferSize = 10;
-    // frequency circular buffer for eliminating signal glitches using median
-    private ArrayCircularBuffer<Double> bufferFrequency = new ArrayCircularBuffer<Double>(bufferSize/2);
-    // frequency circular buffer for averaging frequency data
-    private ArrayCircularBuffer<Integer> bufferFrequencyTemp = new ArrayCircularBuffer<Integer>(bufferSize);
-    // temperauture circular buffer for averaging temperature data
-    private ArrayCircularBuffer<Integer> bufferTemperature = new ArrayCircularBuffer<Integer>(bufferSize);
-    // temperature circular buffer for smoothing data
-    // ArrayCircularBuffer bufferTemperatureTemp = new ArrayCircularBuffer(bufferSize/2);
-    // nominal quartz crystal frequency
-    private int nominalFrequency = 6000000;
-
-    // Arduino half timer clock
-    private static final int ALIAS = 8000000;
     
     private Link link;
  
-    private static Logger logger = Logger.getLogger(OpenQCMConsole.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(OpenQCMConsole.class);
 	
     private ChartDynamicData chartData;
 	
@@ -118,7 +101,9 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
     private JTextField qcmDataChartTextField;
     private JToggleButton biobrightToggleButton;
 
-    private BiobrightClient biobrightClient; 
+    private BiobrightClient biobrightClient;
+    
+    private ArdulinkConnector ardulinkConnector = new ArdulinkConnector();
     
 	/**
 	 * Launch the application.
@@ -132,7 +117,7 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
                 }
             }
         } catch (Exception ex) {
-        	logger.log(SEVERE, null, ex);
+        	logger.error("Unable to init look and feel", ex);
         }
 		
 		EventQueue.invokeLater(new Runnable() {
@@ -376,7 +361,10 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
         );
 
         pack();
-        setLocationRelativeTo(null);		
+        setLocationRelativeTo(null);
+        ardulinkConnector.addOpenQCMListener(new DisplayValues());
+        ardulinkConnector.addOpenQCMListener(new DrawChart());
+        ardulinkConnector.addOpenQCMListener(new SaveFileData());
 	}
 
     private void saveFileBtnActionPerformed(ActionEvent evt) {
@@ -479,7 +467,7 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
             try {
                 link = dlg.getArdulinkConnectionPanel().createLink();
                 if(link.getDelegate() instanceof AbstractListenerLink) {
-                    ((AbstractListenerLink)link.getDelegate()).addCustomListener(this);
+                    ((AbstractListenerLink)link.getDelegate()).addCustomListener(ardulinkConnector);
                 } else {
                 	link.disconnect();
                 	link = null;
@@ -495,7 +483,7 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
 
         } else {
             try {
-				((AbstractListenerLink)link.getDelegate()).removeCustomListener(this);
+				((AbstractListenerLink)link.getDelegate()).removeCustomListener(ardulinkConnector);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -525,79 +513,31 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
 
         if (getFrequencyAlias == "6   MHz"){
             System.out.println("6");
-            nominalFrequency = 6000000;
+            ardulinkConnector.setNominalFrequency(6000000);
             chartData.clearChart();
         }
         else if (getFrequencyAlias == "10 MHz"){
-            nominalFrequency = 10000000;
+            ardulinkConnector.setNominalFrequency(10000000);
             chartData.clearChart();
         }
     }
-
-	@Override
-	public void customEventReceived(CustomEvent customEvent) {
-        String messageString = (String)customEvent.getValue();
-
-        // if the message starts with the string "RAWMONITOR" display and store data
-        if (messageString.startsWith("RAWMONITOR")) {
-            // print the value on the screen
-        	logger.fine(messageString);
-            messageString = messageString.substring("RAWMONITOR".length());
-            String[] dataSplits = messageString.split("_");
-            int dataFrequency = Integer.parseInt(dataSplits[0]);
-            int dataTemperature = Integer.parseInt(dataSplits[1]);
     
-            /* 
-             * Frequency Median implemented using Apache commons Math
-             * frequency data are affected by some glitches due to the 
-             * algorithm for counting pulses during a fixed time interval
-             * median is a robust algorithm for smoothing frequency data
-             * and for eliminating outliers
-             * Frequency data processing algorithm: averaging and calculate median 
-             */
-            
-            // insert new frequency data in circuar buffer and calculate the average
-            bufferFrequencyTemp.insert(dataFrequency);
-            double sum = 0;
-            for (int i = 0; i < bufferFrequencyTemp.size(); i++) {
-                sum = sum + bufferFrequencyTemp.getData(i);
-            }
-            // Average frequency data 
-            double averageFrequency = sum / bufferFrequencyTemp.size();
-            // insert new average frequency data in circuar buffer and calculate median
-            bufferFrequency.insert(averageFrequency);
-            // read the circular buffer
-            int count = bufferFrequency.size();
-            double[] values = new double[count];
-            for (int i = 0; i < count; i++) {
-            	values[i] = bufferFrequency.getData(i);
-            } 
-            Median median = new Median();
-            // calculate the median of frequency data
-            double meanFrequency = median.evaluate(values);
-            // alias arduino timer 
-            if (nominalFrequency == 10000000) {
-            	meanFrequency = (2 * ALIAS) - meanFrequency;
-            } 
-            
-            // insert temperature data in circuar buffer and calculate the average 
-            bufferTemperature.insert(dataTemperature);
-            double sumT = 0;
-            for (int i = 0; i < bufferTemperature.size(); i++) {
-                sumT = sumT + bufferTemperature.getData(i);
-            }
-            // Average temperature data
-            double meanTemperature = sumT / bufferTemperature.size();
-            // TODO divide by 10 for decimal
-            meanTemperature = meanTemperature/10;
-            
-            // display data
-            frequencyCurrent.setText(String.format("%.1f", meanFrequency));
-            temperatureCurrent.setText(String.format("%.1f", meanTemperature));
+    private class DisplayValues implements OpenQCMListener {
 
+		@Override
+		public void incomingEvent(OpenQCMEvent event) {
+            frequencyCurrent.setText(String.format("%.1f", event.getValue().getFrequency()));
+            temperatureCurrent.setText(String.format("%.1f", event.getValue().getTemperature()));
+		}
+    }
+
+    private class DrawChart implements OpenQCMListener {
+
+		@Override
+		public void incomingEvent(OpenQCMEvent event) {
             // add new data in dynamic chart. Frequency data plot by default
-            chartData.addFrequencyData(meanFrequency);
-            chartData.addTemperatureData(meanTemperature);
+            chartData.addFrequencyData(event.getValue().getFrequency());
+            chartData.addTemperatureData(event.getValue().getTemperature());
             
             // show temperature data in dynamic chart
             if (showTemperatureBtn.isSelected() == true) {
@@ -610,7 +550,13 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
             }
             // check domain axis
             chartData.checkDomainAxis();
+		}
+    }
+    
+    private class SaveFileData implements OpenQCMListener {
 
+		@Override
+		public void incomingEvent(OpenQCMEvent event) {
             // store data 
             if (saveFileBtn.isSelected() == true) {
                 try {
@@ -621,8 +567,8 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
                     SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/YY" + "\t" + "HH:mm:ss");
                     bw.write(
                             sdf.format(cal.getTime()) + "\t" 
-                            + String.format("%.1f", meanFrequency)  + "\t" 
-                            + String.format("%.1f", meanTemperature) + "\r\n"
+                            + String.format("%.1f", event.getValue().getFrequency())  + "\t" 
+                            + String.format("%.1f", event.getValue().getTemperature()) + "\r\n"
                     );
                     bw.close();
                 } catch (Exception e) {
@@ -630,14 +576,6 @@ public class OpenQCMConsole extends JFrame implements CustomListener {
                 }
 
             }
-            
-            // call biobright
-            if(isBioBrightConnected()) {
-            	long now = System.currentTimeMillis();
-            	biobrightClient.publish(new PublishingInfo(FREQUENCY, now, String.format("%.1f", meanFrequency), "deviceIDFake1"));
-            	biobrightClient.publish(new PublishingInfo(TEMPERATURE, now, String.format("%.1f", meanTemperature), "deviceIDFake1"));
-            }
-
-        }		
-	}
+		}
+    }
 }
