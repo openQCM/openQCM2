@@ -18,8 +18,6 @@
  */
 package org.openqcm;
 
-import static java.util.logging.Level.SEVERE;
-
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Image;
@@ -58,9 +56,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.ardulink.core.AbstractListenerLink;
 import org.ardulink.legacy.Link;
 import org.openqcm.ardulink.ArdulinkConnectionDialog;
-import org.openqcm.biobright.BiobrightClient;
 import org.openqcm.biobright.BiobrightConnectionDialog;
 import org.openqcm.biobright.ConnectionInfo;
+import org.openqcm.biobright.EventListener;
 import org.openqcm.core.ArdulinkConnector;
 import org.openqcm.core.event.OpenQCMEvent;
 import org.openqcm.core.event.OpenQCMListener;
@@ -101,7 +99,7 @@ public class OpenQCMConsole extends JFrame {
     private JTextField qcmDataChartTextField;
     private JToggleButton biobrightToggleButton;
 
-    private BiobrightClient biobrightClient;
+    private EventListener biobrightEventListener;
     
     private ArdulinkConnector ardulinkConnector = new ArdulinkConnector();
     
@@ -418,44 +416,52 @@ public class OpenQCMConsole extends JFrame {
         if (biobrightToggleButton.isSelected() == true) {
             // open the popup frame for biobright connection
         	BiobrightConnectionDialog dlg = new BiobrightConnectionDialog(this, "Biobright Connection Dialog", "Connection params:");
-            try {
-            	ConnectionInfo connectionInfo = dlg.getBiobrightConnectionPanel().getConnectionInfo();
-            	disconnectBioBright();
-            	
-            	biobrightClient = new BiobrightClient(connectionInfo);
-            	biobrightClient.connect();
-            	if(!isBioBrightConnected()) {
-            		throw new RuntimeException("Connection failed.");
-            	}
-            	
-            	biobrightToggleButton.setText("BioBrigth Disconnect");
-            }
-            catch(Exception e) {
-            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
-            	biobrightToggleButton.setSelected(false);
-            	disconnectBioBright();
-            }
-        	
-        	
+        	if(dlg.isOkPressed()) {
+                try {
+                	connectBioBright(dlg.getBiobrightConnectionPanel().getConnectionInfo());
+                	biobrightToggleButton.setText("BioBrigth Disconnect");
+                }
+                catch(Exception e) {
+                	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
+                	biobrightToggleButton.setSelected(false);
+                	disconnectBioBright();
+                }
+        	} else {
+        		biobrightToggleButton.setSelected(false);
+        	}
         } else {
         	disconnectBioBright();
         	biobrightToggleButton.setText("BioBrigth Connect");
         }
 	}
 
+    private void connectBioBright(ConnectionInfo connectionInfo) {
+    	disconnectBioBright();
+    	
+    	biobrightEventListener = new EventListener(connectionInfo);
+    	if(!isBioBrightConnected()) {
+    		throw new RuntimeException("Connection failed.");
+    	}
+    	
+    	ardulinkConnector.addOpenQCMListener(biobrightEventListener);
+    }
+    
     private boolean isBioBrightConnected() {
-    	return biobrightClient != null && biobrightClient.isConnected();
+    	return biobrightEventListener != null && biobrightEventListener.isConnected();
     }
     
     private void disconnectBioBright() {
     	try {
+        	if(biobrightEventListener != null) {
+        		ardulinkConnector.removeOpenQCMListener(biobrightEventListener);
+        	}
         	if(isBioBrightConnected()) {
-        		biobrightClient.disconnect();
+        		biobrightEventListener.disconnect();
         	}
     	} catch(Exception e1) {
     		// OK is good enough
     	} finally {
-    		biobrightClient = null;
+    		biobrightEventListener = null;
     	}
 	}
 
@@ -464,23 +470,26 @@ public class OpenQCMConsole extends JFrame {
         if (connectBtn.isSelected() == true) {
             // open the popup frame for serial connection
             ArdulinkConnectionDialog dlg = new ArdulinkConnectionDialog(this, "Ardulink Connection Dialog", "Links");
-            try {
-                link = dlg.getArdulinkConnectionPanel().createLink();
-                if(link.getDelegate() instanceof AbstractListenerLink) {
-                    ((AbstractListenerLink)link.getDelegate()).addCustomListener(ardulinkConnector);
-                } else {
-                	link.disconnect();
-                	link = null;
-                	throw new RuntimeException("Selected Link isn't a Listener Link...");
-                }
-                
-                connectBtn.setText("Disconnect");
-            }
-            catch(Exception e) {
-            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
-                connectBtn.setSelected(false);
-            }
-
+        	if(dlg.isOkPressed()) {
+	            try {
+	                    link = dlg.getArdulinkConnectionPanel().createLink();
+	                    if(link.getDelegate() instanceof AbstractListenerLink) {
+	                        ((AbstractListenerLink)link.getDelegate()).addCustomListener(ardulinkConnector);
+	                    } else {
+	                    	link.disconnect();
+	                    	link = null;
+	                    	throw new RuntimeException("Selected Link isn't a Listener Link...");
+	                    }
+	                    
+	                    connectBtn.setText("Disconnect");
+	            }
+	            catch(Exception e) {
+	            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
+	                connectBtn.setSelected(false);
+	            }
+        	} else {
+        		connectBtn.setSelected(false);
+        	}
         } else {
             try {
 				((AbstractListenerLink)link.getDelegate()).removeCustomListener(ardulinkConnector);

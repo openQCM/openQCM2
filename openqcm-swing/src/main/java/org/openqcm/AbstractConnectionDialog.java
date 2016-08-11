@@ -33,6 +33,7 @@ public abstract class AbstractConnectionDialog extends JDialog {
 	private static final long serialVersionUID = -8507363700565401366L;
 
 	private JPanel connectionPanel;
+	private boolean okPressed = false;
 	
     public AbstractConnectionDialog(JFrame parent, String title, String message) {
         super(parent, title, true);
@@ -57,6 +58,7 @@ public abstract class AbstractConnectionDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 		        setVisible(false);
 		        dispose();
+		        okPressed = true;
 			}
 		});
         buttonPane.add(button);
@@ -64,7 +66,7 @@ public abstract class AbstractConnectionDialog extends JDialog {
         
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         pack();
-        setSize(640, 480);
+        // setSize(640, 480);
         // display at the centre of the screen
         setLocationRelativeTo(null);
         setVisible(true);
@@ -75,4 +77,9 @@ public abstract class AbstractConnectionDialog extends JDialog {
 	}
 
 	public abstract JPanel createConnectionPanel();
+
+	public boolean isOkPressed() {
+		return okPressed;
+	}
+	
 }

@@ -1,9 +1,5 @@
 package org.openqcm.core;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -73,14 +69,6 @@ public class ArdulinkConnector implements CustomListener {
             messageString = messageString.substring("RAWMONITOR".length());
             OpenQCMIncomingValue value = computeValue(messageString);
             fireOpenQCMValueReceived(new OpenQCMEvent(value));
-
-            // call biobright
-            if(isBioBrightConnected()) {
-            	long now = System.currentTimeMillis();
-            	biobrightClient.publish(new PublishingInfo(FREQUENCY, now, String.format("%.1f", meanFrequency), "deviceIDFake1"));
-            	biobrightClient.publish(new PublishingInfo(TEMPERATURE, now, String.format("%.1f", meanTemperature), "deviceIDFake1"));
-            }
-
         }		
 	}
 

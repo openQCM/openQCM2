@@ -15,6 +15,8 @@ import javax.swing.JTextField;
 import org.openqcm.config.Configuration;
 import org.openqcm.config.ConfigurationFacade;
 
+import static org.ardulink.gui.connectionpanel.GridBagConstraintsBuilder.constraints;
+
 public class BiobrightConnectionPanel extends JPanel {
 	private JTextField urlTextField;
 	private JTextField usernameTextField;
@@ -26,71 +28,31 @@ public class BiobrightConnectionPanel extends JPanel {
 	 */
 	public BiobrightConnectionPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{225, 225, 0};
-		gridBagLayout.rowHeights = new int[]{75, 75, 75, 75, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
 		JLabel lblUrl = new JLabel("URL:");
-		GridBagConstraints gbc_lblUrl = new GridBagConstraints();
-		gbc_lblUrl.fill = GridBagConstraints.BOTH;
-		gbc_lblUrl.insets = new Insets(0, 0, 5, 5);
-		gbc_lblUrl.gridx = 0;
-		gbc_lblUrl.gridy = 0;
-		add(lblUrl, gbc_lblUrl);
+		add(lblUrl, constraints(0, 0).build());
 		
 		urlTextField = new JTextField();
-		GridBagConstraints gbc_urlTextField = new GridBagConstraints();
-		gbc_urlTextField.fill = GridBagConstraints.BOTH;
-		gbc_urlTextField.insets = new Insets(0, 0, 5, 0);
-		gbc_urlTextField.gridx = 1;
-		gbc_urlTextField.gridy = 0;
-		add(urlTextField, gbc_urlTextField);
-		urlTextField.setColumns(10);
+		urlTextField.setColumns(50);
+		add(urlTextField, constraints(0, 1).fillHorizontal().build());
 		
 		JLabel lblUsername = new JLabel("Username:");
-		GridBagConstraints gbc_lblUsername = new GridBagConstraints();
-		gbc_lblUsername.fill = GridBagConstraints.BOTH;
-		gbc_lblUsername.insets = new Insets(0, 0, 5, 5);
-		gbc_lblUsername.gridx = 0;
-		gbc_lblUsername.gridy = 1;
-		add(lblUsername, gbc_lblUsername);
+		add(lblUsername, constraints(1, 0).build());
 		
 		usernameTextField = new JTextField();
-		GridBagConstraints gbc_usernameTextField = new GridBagConstraints();
-		gbc_usernameTextField.fill = GridBagConstraints.BOTH;
-		gbc_usernameTextField.insets = new Insets(0, 0, 5, 0);
-		gbc_usernameTextField.gridx = 1;
-		gbc_usernameTextField.gridy = 1;
-		add(usernameTextField, gbc_usernameTextField);
-		usernameTextField.setColumns(10);
+		usernameTextField.setColumns(50);
+		add(usernameTextField, constraints(1, 1).fillHorizontal().build());
 		
 		JLabel lblPassword = new JLabel("Password:");
-		GridBagConstraints gbc_lblPassword = new GridBagConstraints();
-		gbc_lblPassword.fill = GridBagConstraints.BOTH;
-		gbc_lblPassword.insets = new Insets(0, 0, 5, 5);
-		gbc_lblPassword.gridx = 0;
-		gbc_lblPassword.gridy = 2;
-		add(lblPassword, gbc_lblPassword);
+		add(lblPassword, constraints(2, 0).build());
 		
 		passwordTextField = new JTextField();
-		GridBagConstraints gbc_passwordTextField = new GridBagConstraints();
-		gbc_passwordTextField.fill = GridBagConstraints.BOTH;
-		gbc_passwordTextField.insets = new Insets(0, 0, 5, 0);
-		gbc_passwordTextField.gridx = 1;
-		gbc_passwordTextField.gridy = 2;
-		add(passwordTextField, gbc_passwordTextField);
-		passwordTextField.setColumns(10);
+		passwordTextField.setColumns(50);
+		add(passwordTextField, constraints(2, 1).build());
 		
 		btnUpdate = new JButton("Update Configuration");
-		GridBagConstraints gbc_btnUpdate = new GridBagConstraints();
-		gbc_btnUpdate.gridwidth = 2;
-		gbc_btnUpdate.fill = GridBagConstraints.BOTH;
-		gbc_btnUpdate.insets = new Insets(0, 0, 0, 5);
-		gbc_btnUpdate.gridx = 0;
-		gbc_btnUpdate.gridy = 3;
-		add(btnUpdate, gbc_btnUpdate);
+		add(btnUpdate, constraints(3, 0).gridwidth(2).fillHorizontal().build());
 		
 		btnUpdate.addActionListener(new ActionListener() {
 			
@@ -101,6 +63,7 @@ public class BiobrightConnectionPanel extends JPanel {
 		});
 
 		loadConfiguration();
+		
 	}
 
 	private void loadConfiguration() {

@@ -28,9 +28,10 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.ardulink</groupId>
-			<artifactId>ardulink-core-base</artifactId>
-			<version>${ardulink.version}</version>
+			<groupId>org.openqcm</groupId>
+			<artifactId>openqcm-core</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
