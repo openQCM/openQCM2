@@ -1,9 +1,12 @@
 package org.openqcm.core;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.ardulink.core.AbstractListenerLink;
+import org.ardulink.core.Link;
 import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
 import org.openqcm.core.event.OpenQCMEvent;
@@ -16,6 +19,8 @@ public class ArdulinkConnector implements CustomListener {
 	private List<OpenQCMListener> listeners = new CopyOnWriteArrayList<>();
 	
 	private static final Logger logger = LoggerFactory.getLogger(ArdulinkConnector.class);
+	
+	private AbstractListenerLink link;
 
     // size of circular buffer
     private final int bufferSize = 10;
@@ -68,8 +73,13 @@ public class ArdulinkConnector implements CustomListener {
         	logger.debug(messageString);
             messageString = messageString.substring("RAWMONITOR".length());
             OpenQCMIncomingValue value = computeValue(messageString);
-            fireOpenQCMValueReceived(new OpenQCMEvent(value));
+            fireOpenQCMValueReceived(new OpenQCMEvent(value, getLinkID()));
         }		
+	}
+
+	private String getLinkID() {
+		// TODO TAKE FROM THE LINK THE ID (AND CACHE IT)
+		return "deviceIDFake2";
 	}
 
 	private OpenQCMIncomingValue computeValue(String messageString) {
@@ -125,4 +135,30 @@ public class ArdulinkConnector implements CustomListener {
         
 	}
 
+	/**
+	 * Sets the Link for this connector. Connector begins to listen for custom events from Ardulink.
+	 * If Link is null then the connector disconnects itself from listening custom events.
+	 * @param link
+	 * @throws IOException
+	 */
+	public void setLink(Link link) throws IOException {
+		
+		if(link == null) {
+
+			if(this.link != null) {
+				this.link.removeCustomListener(this);
+			}
+            this.link = null;
+			
+		} else {
+            if(link instanceof AbstractListenerLink) {
+            	setLink(null);
+                this.link = (AbstractListenerLink)link;
+                this.link.addCustomListener(this);
+            } else {
+            	throw new RuntimeException("Selected Link isn't a Listener Link...");
+            }
+			
+		}
+	}
 }

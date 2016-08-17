@@ -1,12 +1,12 @@
 package org.openqcm.biobright;
 
-import org.openqcm.core.event.OpenQCMEvent;
-import org.openqcm.core.event.OpenQCMListener;
-
 import static org.openqcm.biobright.PublishingInfo.Type.FREQUENCY;
-import static org.openqcm.biobright.PublishingInfo.Type.TEMPERATURE;;
+import static org.openqcm.biobright.PublishingInfo.Type.TEMPERATURE;
 
-public class EventListener implements OpenQCMListener {
+import org.openqcm.core.event.AbstractOQCMListener;
+import org.openqcm.core.event.OpenQCMEvent;;
+
+public class EventListener extends AbstractOQCMListener {
 	
 	private BiobrightClient biobrightClient;
 
@@ -16,22 +16,24 @@ public class EventListener implements OpenQCMListener {
 		this.biobrightClient.connect();
 	}
 
-	@Override
-	public void incomingEvent(OpenQCMEvent event) {
-        // call biobright
-        if(isConnected()) {
-        	long now = System.currentTimeMillis();
-        	biobrightClient.publish(new PublishingInfo(FREQUENCY, now, String.format("%.1f", event.getValue().getFrequency()), "deviceIDFake1"));
-        	biobrightClient.publish(new PublishingInfo(TEMPERATURE, now, String.format("%.1f", event.getValue().getTemperature()), "deviceIDFake1"));
-        }
-	}
-
 	public boolean isConnected() {
 		return biobrightClient.isConnected();
 	}
 
 	public void disconnect() {
+		
+		stopConsumerThread();
 		biobrightClient.disconnect();
+	}
+
+	@Override
+	public void consumeEvent(OpenQCMEvent event) {
+        // call biobright
+        if(isConnected()) {
+        	long now = System.currentTimeMillis();
+        	biobrightClient.publish(new PublishingInfo(FREQUENCY, now, String.format("%.1f", event.getValue().getFrequency()), event.getLinkID()));
+        	biobrightClient.publish(new PublishingInfo(TEMPERATURE, now, String.format("%.1f", event.getValue().getTemperature()), event.getLinkID()));
+        }
 	}
 	
 	

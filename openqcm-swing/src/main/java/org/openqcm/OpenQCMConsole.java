@@ -53,7 +53,6 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.ardulink.core.AbstractListenerLink;
 import org.ardulink.legacy.Link;
 import org.openqcm.ardulink.ArdulinkConnectionDialog;
 import org.openqcm.biobright.BiobrightConnectionDialog;
@@ -472,16 +471,9 @@ public class OpenQCMConsole extends JFrame {
             ArdulinkConnectionDialog dlg = new ArdulinkConnectionDialog(this, "Ardulink Connection Dialog", "Links");
         	if(dlg.isOkPressed()) {
 	            try {
-	                    link = dlg.getArdulinkConnectionPanel().createLink();
-	                    if(link.getDelegate() instanceof AbstractListenerLink) {
-	                        ((AbstractListenerLink)link.getDelegate()).addCustomListener(ardulinkConnector);
-	                    } else {
-	                    	link.disconnect();
-	                    	link = null;
-	                    	throw new RuntimeException("Selected Link isn't a Listener Link...");
-	                    }
-	                    
-	                    connectBtn.setText("Disconnect");
+                    link = dlg.getArdulinkConnectionPanel().createLink();
+                    ardulinkConnector.setLink(link.getDelegate());
+                    connectBtn.setText("Disconnect");
 	            }
 	            catch(Exception e) {
 	            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
@@ -492,7 +484,7 @@ public class OpenQCMConsole extends JFrame {
         	}
         } else {
             try {
-				((AbstractListenerLink)link.getDelegate()).removeCustomListener(ardulinkConnector);
+            	ardulinkConnector.setLink(null);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
