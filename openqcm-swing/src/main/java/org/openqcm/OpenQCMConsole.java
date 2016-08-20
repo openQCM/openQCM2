@@ -63,6 +63,7 @@ import org.openqcm.core.event.OpenQCMEvent;
 import org.openqcm.core.event.OpenQCMListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.swing.SwingConstants;
 
 public class OpenQCMConsole extends JFrame {
 
@@ -97,6 +98,7 @@ public class OpenQCMConsole extends JFrame {
     private JFormattedTextField temperatureCurrent;
     private JTextField qcmDataChartTextField;
     private JToggleButton biobrightToggleButton;
+    private JLabel lblLinkID;
 
     private EventListener biobrightEventListener;
     
@@ -201,6 +203,9 @@ public class OpenQCMConsole extends JFrame {
             	biobrightActionPerformed(evt);
             }
         });
+        
+        lblLinkID = new JLabel("");
+        lblLinkID.setHorizontalAlignment(SwingConstants.RIGHT);
 
 
         GroupLayout jPanelBottomLayout = new GroupLayout(jPanelBottom);
@@ -212,7 +217,10 @@ public class OpenQCMConsole extends JFrame {
         			.addComponent(qcmDataChartTextField, 484, 484, 484)
         			.addPreferredGap(ComponentPlacement.RELATED)
         			.addComponent(connectBtn, GroupLayout.PREFERRED_SIZE, 90, GroupLayout.PREFERRED_SIZE))
-        		.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 158, GroupLayout.PREFERRED_SIZE)
+        		.addGroup(jPanelBottomLayout.createSequentialGroup()
+        			.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 158, GroupLayout.PREFERRED_SIZE)
+        			.addGap(18)
+        			.addComponent(lblLinkID, GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE))
         );
         jPanelBottomLayout.setVerticalGroup(
         	jPanelBottomLayout.createParallelGroup(Alignment.LEADING)
@@ -222,7 +230,9 @@ public class OpenQCMConsole extends JFrame {
         				.addComponent(qcmDataChartTextField, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
         				.addComponent(saveFileBtn, GroupLayout.DEFAULT_SIZE, 32, Short.MAX_VALUE))
         			.addPreferredGap(ComponentPlacement.RELATED)
-        			.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
+        			.addGroup(jPanelBottomLayout.createParallelGroup(Alignment.BASELINE)
+        				.addComponent(biobrightToggleButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
+        				.addComponent(lblLinkID))
         			.addContainerGap())
         );
         jPanelBottom.setLayout(jPanelBottomLayout);
@@ -473,10 +483,12 @@ public class OpenQCMConsole extends JFrame {
 	            try {
                     link = dlg.getArdulinkConnectionPanel().createLink();
                     ardulinkConnector.setLink(link.getDelegate());
+                    lblLinkID.setText("LinkID: " + ardulinkConnector.getLinkID());
                     connectBtn.setText("Disconnect");
 	            }
 	            catch(Exception e) {
 	            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
+	                lblLinkID.setText("");
 	                connectBtn.setSelected(false);
 	            }
         	} else {
@@ -485,6 +497,7 @@ public class OpenQCMConsole extends JFrame {
         } else {
             try {
             	ardulinkConnector.setLink(null);
+                lblLinkID.setText("");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

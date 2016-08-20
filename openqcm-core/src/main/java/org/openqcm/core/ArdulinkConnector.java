@@ -77,7 +77,7 @@ public class ArdulinkConnector implements CustomListener {
         }		
 	}
 
-	private String getLinkID() {
+	public String getLinkID() {
 		// TODO TAKE FROM THE LINK THE ID (AND CACHE IT)
 		return "deviceIDFake2";
 	}
