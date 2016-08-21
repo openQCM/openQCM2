@@ -66,6 +66,22 @@
 		<module>deploy-dist</module>
 	</modules>
 
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.5.3</version>
+					<configuration>
+						<descriptors>
+							<descriptor>assembly.xml</descriptor>
+						</descriptors>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

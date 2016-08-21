@@ -1,11 +1,9 @@
 HOW TO START openQCM APPLICATION
 
-openQCM has a desktop application you can start. You can double click on the swing jar file or run it with
+openQCM has a desktop application you can start. You can double click on the openqcm-swing-${project.version}.jar file or run it with
 you system command line. 
 
 From your linux/windows/apple shell you can run this command (from openQCM's lib folder):
 
-java -jar openQCM-console-${project.version}.jar
+java -jar openqcm-swing-${project.version}.jar
 
-
-TO BE REFINED!!!!!

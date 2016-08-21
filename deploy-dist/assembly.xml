@@ -8,7 +8,7 @@
 	</formats>
 
 	<includeBaseDirectory>false</includeBaseDirectory>
-	<baseDirectory>ardulink</baseDirectory>
+	<baseDirectory>openQCM</baseDirectory>
 
 	<moduleSets>
 		<moduleSet>
@@ -22,11 +22,22 @@
 				<unpack>false</unpack>
 			</binaries>
 		</moduleSet>
+	</moduleSets>
 	<fileSets>
 		<!-- include rootfolder's static files in ${baseDirectory} -->
 		<fileSet>
 			<directory>rootfolder</directory>
 			<outputDirectory>openQCM</outputDirectory>
+			<excludes>
+				<exclude>bin/*</exclude>
+			</excludes>
 		</fileSet>
+		<!-- include rootfolder's dynamic files in ${baseDirectory} (filter == true) -->
+		<fileSet>
+			<directory>rootfolder/bin</directory>
+			<outputDirectory>openQCM/bin</outputDirectory>
+			<filtered>true</filtered>
+		</fileSet>
+		
 	</fileSets>
 </assembly>
