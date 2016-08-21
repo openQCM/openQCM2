@@ -9,6 +9,7 @@ import org.ardulink.core.AbstractListenerLink;
 import org.ardulink.core.Link;
 import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
+import org.ardulink.extendedfeatures.deviceid.DeviceID;
 import org.openqcm.core.event.OpenQCMEvent;
 import org.openqcm.core.event.OpenQCMListener;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class ArdulinkConnector implements CustomListener {
 	private static final Logger logger = LoggerFactory.getLogger(ArdulinkConnector.class);
 	
 	private AbstractListenerLink link;
+	private DeviceID deviceID;
 
     // size of circular buffer
     private final int bufferSize = 10;
@@ -78,8 +80,12 @@ public class ArdulinkConnector implements CustomListener {
 	}
 
 	public String getLinkID() {
-		// TODO TAKE FROM THE LINK THE ID (AND CACHE IT)
-		return "deviceIDFake2";
+		try {
+			return (deviceID == null)? "" : deviceID.getUniqueID();
+		} catch (IOException e) {
+			logger.error("Something went wrong", e);
+			throw new RuntimeException("Something went wrong", e);
+		}
 	}
 
 	private OpenQCMIncomingValue computeValue(String messageString) {
@@ -149,12 +155,14 @@ public class ArdulinkConnector implements CustomListener {
 				this.link.removeCustomListener(this);
 			}
             this.link = null;
+            this.deviceID = null;
 			
 		} else {
             if(link instanceof AbstractListenerLink) {
             	setLink(null);
                 this.link = (AbstractListenerLink)link;
                 this.link.addCustomListener(this);
+                deviceID = new DeviceID(this.link);
             } else {
             	throw new RuntimeException("Selected Link isn't a Listener Link...");
             }
