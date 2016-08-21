@@ -63,6 +63,7 @@
 		<module>openqcm-swing</module>
 		<module>openqcm-virtualhardware</module>
 		<module>openqcm-biobright</module>
+		<module>deploy-dist</module>
 	</modules>
 
 	<dependencyManagement>
