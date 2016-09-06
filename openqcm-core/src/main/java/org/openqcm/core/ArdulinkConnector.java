@@ -21,7 +21,7 @@ public class ArdulinkConnector implements CustomListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ArdulinkConnector.class);
 	
-	private AbstractListenerLink link;
+	private Link link;
 	private DeviceID deviceID;
 
     // size of circular buffer
@@ -158,14 +158,10 @@ public class ArdulinkConnector implements CustomListener {
             this.deviceID = null;
 			
 		} else {
-            if(link instanceof AbstractListenerLink) {
-            	setLink(null);
-                this.link = (AbstractListenerLink)link;
-                this.link.addCustomListener(this);
-                deviceID = new DeviceID(this.link);
-            } else {
-            	throw new RuntimeException("Selected Link isn't a Listener Link...");
-            }
+        	setLink(null);
+            this.link = link;
+            this.link.addCustomListener(this);
+            deviceID = new DeviceID(this.link);
 			
 		}
 	}
