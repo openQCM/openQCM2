@@ -66,6 +66,8 @@ So the final length to store the unique id is 38 bytes.
 #define UNIQUE_ID_MAGIC_NUMBER_HIGH 76
 #define UNIQUE_ID_MAGIC_NUMBER_LOW 90
 
+String inputString = "";         // a string to hold incoming data (Ardulink)
+boolean stringComplete = false;  // whether the string is complete (Ardulink)
 
 // print data to serial port 
 void dataPrint(unsigned long Count, int Temperature){
@@ -186,7 +188,7 @@ String getUniqueID(String suggested) {
 	
 	EEPROM.get( UNIQUE_ID_EEPROM_ADDRESS, buffer );
 	if(buffer[0] == UNIQUE_ID_MAGIC_NUMBER_HIGH && buffer[1] == UNIQUE_ID_MAGIC_NUMBER_LOW) {
-		retvalue = String(&buffer[2])
+		retvalue = String(&buffer[2]);
 	} else {
 		buffer[0] = UNIQUE_ID_MAGIC_NUMBER_HIGH;
 		buffer[1] = UNIQUE_ID_MAGIC_NUMBER_LOW;
@@ -196,9 +198,6 @@ String getUniqueID(String suggested) {
 
 	return retvalue;
 }
-
-String inputString = "";         // a string to hold incoming data (Ardulink)
-boolean stringComplete = false;  // whether the string is complete (Ardulink)
 
 
 // QCM frequency by counting the number of pulses in a fixed time 
