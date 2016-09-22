@@ -3,9 +3,9 @@ package org.openqcm.core;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.stat.descriptive.rank.Median;
-import org.ardulink.core.AbstractListenerLink;
 import org.ardulink.core.Link;
 import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
@@ -161,6 +161,11 @@ public class ArdulinkConnector implements CustomListener {
         	setLink(null);
             this.link = link;
             this.link.addCustomListener(this);
+            try {
+				TimeUnit.SECONDS.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
             deviceID = new DeviceID(this.link);
 			
 		}

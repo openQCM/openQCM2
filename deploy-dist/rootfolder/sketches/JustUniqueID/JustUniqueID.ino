@@ -34,24 +34,9 @@
  */
 
 // include library for frequency counting
-#include <FreqCount.h>
 
 #include <EEPROM.h>
 
-// fixed "gate interval" time for counting cycles 1000ms  
-#define GATE   1000
-// Thermistor pin
-#define THERMISTORPIN A1 
-// // resistance at 25 degrees C
-#define THERMISTORNOMINAL 10000
-// temp. for nominal resistance (almost always 25 C)
-#define TEMPERATURENOMINAL 25   
-// how many samples to take and average 
-#define NUMSAMPLES 10
-// The beta coefficient of the thermistor (usually 3000-4000)
-#define BCOEFFICIENT 3950
-// the value of the 'other' resistor
-#define SERIESRESISTOR 10000    
 
 /*
 Unique ID is suggested by connected PC. Then it is stored and used for ever.
@@ -68,56 +53,7 @@ So the final length to store the unique id is 38 bytes.
 
 String inputString = "";         // a string to hold incoming data (Ardulink)
 boolean stringComplete = false;  // whether the string is complete (Ardulink)
-boolean initialized = false;  // whether the string is complete (Ardulink)
 
-// print data to serial port 
-void dataPrint(unsigned long Count, int Temperature){
-  Serial.print("alp://cevnt/");
-  Serial.print("RAWMONITOR");
-  Serial.print(Count);
-  Serial.print("_");
-  Serial.print(Temperature);
-  Serial.print('\n');
-  Serial.flush();
-}
-
-
-// measure temperature
-int getTemperature(void){
-  int i;
-  float average;
-  int samples[NUMSAMPLES];
-  float thermistorResistance;
-  int Temperature; 
-
-  // acquire N samples
-  for (i=0; i< NUMSAMPLES; i++) {
-    samples[i] = analogRead(THERMISTORPIN);
-    delay(10);
-  }
-
-  // average all the samples out
-  average = 0;
-  for (i=0; i< NUMSAMPLES; i++) {
-    average += samples[i];
-  }
-  average /= NUMSAMPLES;
-
-  // convert the value to resistance
-  thermistorResistance = average * SERIESRESISTOR / (1023 - average);
-  
-  float steinhart;
-  steinhart = thermistorResistance / THERMISTORNOMINAL;          // (R/Ro)
-  steinhart = log(steinhart);                       // ln(R/Ro)
-  steinhart /= BCOEFFICIENT;                        // 1/B * ln(R/Ro)
-  steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
-  steinhart = 1.0 / steinhart;                      // Invert
-  steinhart -= 273.15;                              // convert to C
-
-  // decimal value
-  Temperature = steinhart * 10;
-  return(Temperature);
-}
 
 // read commands sent with Ardulink
 void readInputCommands(){
@@ -170,7 +106,6 @@ void readInputCommands(){
         if(uniqueID.length() > 0) {
         	Serial.print("&UniqueID=");
         	Serial.print(uniqueID);
-          initialized = true;
         }
         Serial.print('\n'); // End of Message
         Serial.flush();
@@ -210,24 +145,10 @@ int temperature = 0;
 
 void setup(){
   Serial.begin(115200);
-  // Configure the reference voltage used for analog input 
-  analogReference(EXTERNAL);
-  // init the frequency counter
-  FreqCount.begin(GATE);
   while(!Serial); // Wait until Serial not connected (because difference between Leonardo and Micro with UNO and others)
-
-  while(!initialized) {
-    readInputCommands();
-  }
 }
 
 void loop(){
-  if (FreqCount.available()) 
-  {
-    frequency = FreqCount.read();       // measure QCM frequency
-    temperature = getTemperature();     // measure temperature 
-    dataPrint(frequency, temperature);  // print data
-  }
   
   readInputCommands();
 }

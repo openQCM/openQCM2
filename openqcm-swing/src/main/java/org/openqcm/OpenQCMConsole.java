@@ -490,6 +490,10 @@ public class OpenQCMConsole extends JFrame {
 	            	JOptionPane.showMessageDialog(this, e.getMessage(), "Something went wrong...", JOptionPane.ERROR_MESSAGE);
 	                lblLinkID.setText("");
 	                connectBtn.setSelected(false);
+	                if(link != null) {
+	                	link.disconnect();
+	                	link = null;
+	                }
 	            }
         	} else {
         		connectBtn.setSelected(false);

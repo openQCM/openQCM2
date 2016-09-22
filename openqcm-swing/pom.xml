@@ -39,6 +39,11 @@
 			<version>${ardulink.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.ardulink</groupId>
+			<artifactId>ardulink-core-serial-rxtx</artifactId>
+			<version>${ardulink.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.openqcm</groupId>
 			<artifactId>openqcm-core</artifactId>
 			<version>${project.version}</version>
@@ -62,6 +67,11 @@
 		    <groupId>org.apache.commons</groupId>
 		    <artifactId>commons-math3</artifactId>
 		    <version>3.6</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
