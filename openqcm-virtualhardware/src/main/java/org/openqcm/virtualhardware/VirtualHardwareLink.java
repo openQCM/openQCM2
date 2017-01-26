@@ -1,5 +1,7 @@
 package org.openqcm.virtualhardware;
 
+import static org.ardulink.core.proto.api.MessageIdHolders.addMessageId;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import org.ardulink.core.linkmanager.LinkConfig;
 import org.ardulink.core.messages.api.ToDeviceMessageCustom;
 import org.ardulink.core.messages.impl.DefaultToDeviceMessageCustom;
 import org.ardulink.core.proto.api.MessageIdHolder;
+import org.ardulink.core.proto.api.MessageIdHolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +78,24 @@ public class VirtualHardwareLink extends AbstractListenerLink {
 
 	};
 
+	/*
+	 * Message ID sequence for each request
+	 */
+	private long messageId = 0;
+	
+	/*
+	 * Message ID for the current request message
+	 */
 	private Long requestUniqueID = null;
+	
+	/*
+	 * suggested HARDWARE ID to be set on this virtual hardware
+	 */
 	private String uniqueIDSuggested = null;
+	
+	/*
+	 * HARDWARE ID
+	 */
 	private String uniqueID = null;
 	
 	private int degree = 0;
@@ -92,50 +111,56 @@ public class VirtualHardwareLink extends AbstractListenerLink {
 	}
 
 	@Override
-	public void startListening(Pin pin) throws IOException {
+	public long startListening(Pin pin) throws IOException {
 		logger.info("{}", pin);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 
 	@Override
-	public void stopListening(Pin pin) throws IOException {
+	public long stopListening(Pin pin) throws IOException {
 		logger.info("{}", pin);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void switchAnalogPin(AnalogPin analogPin, int value)
+	public long switchAnalogPin(AnalogPin analogPin, int value)
 			throws IOException {
 		logger.info("{} set to {}", analogPin, value);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void switchDigitalPin(DigitalPin digitalPin, boolean value)
+	public long switchDigitalPin(DigitalPin digitalPin, boolean value)
 			throws IOException {
 		logger.info("{} set to {}", digitalPin, value);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void sendKeyPressEvent(char keychar, int keycode, int keylocation,
+	public long sendKeyPressEvent(char keychar, int keycode, int keylocation,
 			int keymodifiers, int keymodifiersex) throws IOException {
 		logger.info("key pressed ({} {} {} {} {})", keychar, keycode,
 				keylocation, keymodifiers, keymodifiersex);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void sendTone(Tone tone) throws IOException {
+	public long sendTone(Tone tone) throws IOException {
 		logger.info("tone {}", tone);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void sendNoTone(AnalogPin analogPin) throws IOException {
+	public long sendNoTone(AnalogPin analogPin) throws IOException {
 		logger.info("no tone on {}", analogPin);
+		return MessageIdHolders.NO_ID.getId();
 	}
 
 	@Override
-	public void sendCustomMessage(String... messages) throws IOException {
+	public long sendCustomMessage(String... messages) throws IOException {
 		logger.info("custom message {}", Arrays.asList(messages));
 		
-		// If it's a request for get device Unique ID then (see DeviceID class)
 		if(messages != null && messages.length == 2 && messages[0].equals("getUniqueID")) {
 			logger.info("custom message unique ID request");
 			ToDeviceMessageCustom custom = addMessageIdIfNeeded(new DefaultToDeviceMessageCustom(messages));
@@ -144,6 +169,20 @@ public class VirtualHardwareLink extends AbstractListenerLink {
 				uniqueIDSuggested = messages[1];
 			}
 		}
+		
+		if(requestUniqueID != null) {
+			return requestUniqueID;
+		}
+		return MessageIdHolders.NO_ID.getId();
 	}
+	
+	private <T> T addMessageIdIfNeeded(T event) {
+		return hasRplyListeners() ? addMessageId(event, nextId()) : event;
+	}
+
+	private long nextId() {
+		return ++messageId;
+	}
+
 
 }

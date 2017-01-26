@@ -33,11 +33,6 @@
 			<version>${ardulink.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.ardulink</groupId>
-			<artifactId>ardulink-extended-features</artifactId>
-			<version>${ardulink.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 		</dependency>

@@ -1,7 +1,12 @@
 package org.openqcm.core;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.ardulink.util.Preconditions.checkNotNull;
+import static org.ardulink.util.Preconditions.checkState;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -9,7 +14,8 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.ardulink.core.Link;
 import org.ardulink.core.events.CustomEvent;
 import org.ardulink.core.events.CustomListener;
-import org.ardulink.extendedfeatures.deviceid.DeviceID;
+import org.ardulink.core.events.RplyEvent;
+import org.ardulink.core.qos.ResponseAwaiter;
 import org.openqcm.core.event.OpenQCMEvent;
 import org.openqcm.core.event.OpenQCMListener;
 import org.slf4j.Logger;
@@ -20,9 +26,12 @@ public class ArdulinkConnector implements CustomListener {
 	private List<OpenQCMListener> listeners = new CopyOnWriteArrayList<>();
 	
 	private static final Logger logger = LoggerFactory.getLogger(ArdulinkConnector.class);
+
+	private static final String GET_UNIQUE_ID_CUSTOM_MESSAGE = "getUniqueID";
+	private static final String UNIQUE_ID_PARAMETER_VALUE_KEY = "UniqueID";
 	
 	private Link link;
-	private DeviceID deviceID;
+	private String deviceID;
 
     // size of circular buffer
     private final int bufferSize = 10;
@@ -67,7 +76,7 @@ public class ArdulinkConnector implements CustomListener {
 
 	@Override
 	public void customEventReceived(CustomEvent customEvent) {
-        String messageString = (String)customEvent.getValue();
+        String messageString = customEvent.getMessage();
 
         // if the message starts with the string "RAWMONITOR" display and store data
         if (messageString.startsWith("RAWMONITOR")) {
@@ -81,7 +90,7 @@ public class ArdulinkConnector implements CustomListener {
 
 	public String getLinkID() {
 		try {
-			return (deviceID == null)? "" : deviceID.getUniqueID();
+			return (deviceID == null) ? initID() : deviceID;
 		} catch (IOException e) {
 			logger.error("Something went wrong", e);
 			throw new RuntimeException("Something went wrong", e);
@@ -166,8 +175,29 @@ public class ArdulinkConnector implements CustomListener {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-            deviceID = new DeviceID(this.link);
+            deviceID = initID();
 			
 		}
+	}
+
+	private String initID() throws IOException {
+		String uniqueID;
+		RplyEvent rplyEvent = ResponseAwaiter.onLink(link)
+				.withTimeout(100000, MILLISECONDS)
+				.waitForResponse(sendUniqueIdCustomMsg(link));
+		
+		checkState(rplyEvent.isOk(), "Something went wrong on reply from Device searching for unique ID.");
+		uniqueID = checkNotNull(rplyEvent.getParameterValue(UNIQUE_ID_PARAMETER_VALUE_KEY), "Reply doesn't contain UniqueID").toString();
+
+		return uniqueID;
+	}
+
+	private long sendUniqueIdCustomMsg(Link link) throws IOException {
+		return link.sendCustomMessage(GET_UNIQUE_ID_CUSTOM_MESSAGE,	getSuggestedUniqueID());
+	}
+	
+	private String getSuggestedUniqueID() {
+		String sugestedUniqueID = UUID.randomUUID().toString();
+		return sugestedUniqueID;
 	}
 }

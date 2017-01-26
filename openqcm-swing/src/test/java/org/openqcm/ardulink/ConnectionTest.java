@@ -13,7 +13,6 @@ import org.ardulink.core.linkmanager.LinkManager;
 import org.ardulink.core.linkmanager.LinkManager.ConfigAttribute;
 import org.ardulink.core.linkmanager.LinkManager.Configurer;
 import org.ardulink.util.URIs;
-import org.junit.Ignore;
 import org.junit.Test;
 
 //@Ignore
@@ -50,7 +49,7 @@ public class ConnectionTest {
 			
 			@Override
 			public void customEventReceived(CustomEvent e) {
-				System.out.println(e.getValue());
+				System.out.println(e.getMessage());
 			}
 		});
 
