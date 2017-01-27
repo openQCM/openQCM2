@@ -70,6 +70,7 @@ public class VirtualHardwareLink extends AbstractListenerLink {
 				}
 				Map<String, Object> parameters = new HashMap<String, Object>();
 				parameters.put("UniqueID", uniqueID);
+				logger.info(String.format("Virtual Hardware returning unique ID: %s", uniqueID));
 				fireReplyReceived(new DefaultRplyEvent(true, requestUniqueID, parameters));
 				requestUniqueID = null;
 				uniqueIDSuggested = null;
@@ -163,7 +164,8 @@ public class VirtualHardwareLink extends AbstractListenerLink {
 		
 		if(messages != null && messages.length == 2 && messages[0].equals("getUniqueID")) {
 			logger.info("custom message unique ID request");
-			ToDeviceMessageCustom custom = addMessageIdIfNeeded(new DefaultToDeviceMessageCustom(messages));
+//			ToDeviceMessageCustom custom = addMessageIdIfNeeded(new DefaultToDeviceMessageCustom(messages));
+			ToDeviceMessageCustom custom = addMessageId(new DefaultToDeviceMessageCustom(messages), nextId());
 			if(custom instanceof MessageIdHolder) {
 				requestUniqueID = ((MessageIdHolder)custom).getId();
 				uniqueIDSuggested = messages[1];

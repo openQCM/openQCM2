@@ -1,6 +1,6 @@
 package org.openqcm.core;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.ardulink.util.Preconditions.checkNotNull;
 import static org.ardulink.util.Preconditions.checkState;
 
@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.ardulink.core.Link;
@@ -89,12 +88,7 @@ public class ArdulinkConnector implements CustomListener {
 	}
 
 	public String getLinkID() {
-		try {
-			return (deviceID == null) ? initID() : deviceID;
-		} catch (IOException e) {
-			logger.error("Something went wrong", e);
-			throw new RuntimeException("Something went wrong", e);
-		}
+		return deviceID;
 	}
 
 	private OpenQCMIncomingValue computeValue(String messageString) {
@@ -170,11 +164,6 @@ public class ArdulinkConnector implements CustomListener {
         	setLink(null);
             this.link = link;
             this.link.addCustomListener(this);
-            try {
-				TimeUnit.SECONDS.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
             deviceID = initID();
 			
 		}
@@ -183,7 +172,7 @@ public class ArdulinkConnector implements CustomListener {
 	private String initID() throws IOException {
 		String uniqueID;
 		RplyEvent rplyEvent = ResponseAwaiter.onLink(link)
-				.withTimeout(100000, MILLISECONDS)
+				.withTimeout(5, SECONDS)
 				.waitForResponse(sendUniqueIdCustomMsg(link));
 		
 		checkState(rplyEvent.isOk(), "Something went wrong on reply from Device searching for unique ID.");
